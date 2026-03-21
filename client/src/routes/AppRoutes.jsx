@@ -11,6 +11,7 @@ const MyOrders = lazy(() => import('../pages/client/MyOrders'));
 const AdminLayout = lazy(() => import('../layout/AdminLayout'));
 const AdminLogin = lazy(() => import('../pages/admin/AdminLogin'));
 const CustomerLogin = lazy(() => import('../pages/client/CustomerLogin'));
+const CustomerRegister = lazy(() => import('../pages/client/CustomerRegister'));
 const AddProduct = lazy(() => import('../pages/admin/AddProduct'));
 const EditProduct = lazy(() => import('../pages/admin/EditProduct'));
 const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
@@ -36,6 +37,7 @@ const AppRoutes = ({ products, categories }) => {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/login" element={<CustomerLogin />} />
+        <Route path="/register" element={<CustomerRegister />} />
         <Route path="/admin" element={<AdminLogin />} />
         
         {/* Admin Layout with nested routes */}

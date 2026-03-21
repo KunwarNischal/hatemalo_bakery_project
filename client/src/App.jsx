@@ -6,7 +6,6 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import CartDrawer from './components/drawers/CartDrawer';
 import AppRoutes from './routes/AppRoutes';
-import ErrorBoundary from './components/common/ErrorBoundary';
 import { INITIAL_PRODUCTS, CATEGORIES } from './assets/data';
 import { useCart } from './hooks/useCart';
 import { getProducts, getCategories } from './services/productService';
@@ -86,23 +85,21 @@ export default function App() {
   }, []);
 
   return (
-    <ErrorBoundary title="Hatemalo Bakery - Something went wrong">
-      <CartProvider>
-        <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 3000, style: { borderRadius: '16px', background: '#3d2b1f', color: '#fff' } }} />
-        <Router>
-          <Layout 
-            user={user} 
-            setUser={setUser} 
-            isCartOpen={isCartOpen} 
-            setIsCartOpen={setIsCartOpen} 
-          >
-            <AppRoutes 
-              products={products} 
-              categories={categories} 
-            />
+    <CartProvider>
+      <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 3000, style: { borderRadius: '16px', background: '#3d2b1f', color: '#fff' } }} />
+      <Router>
+        <Layout 
+          user={user} 
+          setUser={setUser} 
+          isCartOpen={isCartOpen} 
+          setIsCartOpen={setIsCartOpen} 
+        >
+          <AppRoutes 
+            products={products} 
+            categories={categories} 
+          />
         </Layout>
       </Router>
     </CartProvider>
-    </ErrorBoundary>
   );
 }

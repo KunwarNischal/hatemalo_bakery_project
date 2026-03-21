@@ -1,107 +1,97 @@
 /**
  * Hook: useFormValidation
- * Advanced form field validation with flexible rules
+ * Advanced form validation with field-level rules
  * 
- * @description Validates form fields with support for multiple validation rules
- * @param {Object} validationRules - Field validation rules configuration
+ * @description Provides comprehensive form validation with multiple rule types
+ * @param {Object} initialValues - Initial form values object
+ * @param {Object} validationRules - Rules object where keys are field names and values are rule functions
  * 
- * @returns {Object} { errors, validateField, validateForm, clearError, clearErrors }
+ * @returns {Object} { values, errors, validate, validateField, setFieldValue, reset, isValid }
  * 
  * @example
- * const { errors, validateField } = useFormValidation({
- *   email: [
- *     { required: 'Email required' },
- *     { pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email' } }
- *   ]
- * });
+ * const { values, errors, validate, validateField } = useFormValidation(
+ *   { firstName: '', email: '', password: '' },
+ *   {
+ *     firstName: [
+ *       (value) => !value ? 'First name is required' : '',
+ *       (value) => value.length < 2 ? 'Min 2 characters' : ''
+ *     ],
+ *     email: [
+ *       (value) => !value ? 'Email is required' : '',
+ *       (value) => !/\S+@\S+\.\S+/.test(value) ? 'Invalid email' : ''
+ *     ]
+ *   }
+ * );
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
-export const useFormValidation = (validationRules = {}) => {
+export const useFormValidation = (initialValues, validationRules = {}) => {
+  const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
 
-  const validateField = useCallback((field, value) => {
-    const rules = validationRules[field] || [];
-    let fieldError = '';
+  const validateField = useCallback((name, value) => {
+    if (!validationRules[name]) {
+      return '';
+    }
 
-    for (const rule of rules) {
-      if (rule.required && !value) {
-        fieldError = rule.required;
-        break;
-      }
-      if (rule.minLength && value && value.length < rule.minLength.value) {
-        fieldError = rule.minLength.message;
-        break;
-      }
-      if (rule.pattern && value && !rule.pattern.value.test(value)) {
-        fieldError = rule.pattern.message;
-        break;
-      }
-      if (rule.custom && !rule.custom.validator(value)) {
-        fieldError = rule.custom.message;
-        break;
+    const rules = validationRules[name];
+    const ruleArray = Array.isArray(rules) ? rules : [rules];
+
+    for (let rule of ruleArray) {
+      const error = rule(value);
+      if (error) {
+        return error;
       }
     }
 
-    setErrors(prev => ({ ...prev, [field]: fieldError }));
-    return !fieldError;
+    return '';
   }, [validationRules]);
 
-  const validateForm = useCallback((formData) => {
+  const validate = useCallback(() => {
     const newErrors = {};
-    let isValid = true;
 
-    Object.keys(validationRules).forEach(field => {
-      const rules = validationRules[field];
-      let fieldError = '';
-
-      for (const rule of rules) {
-        if (rule.required && !formData[field]) {
-          fieldError = rule.required;
-          break;
-        }
-        if (rule.minLength && formData[field] && formData[field].length < rule.minLength.value) {
-          fieldError = rule.minLength.message;
-          break;
-        }
-        if (rule.pattern && formData[field] && !rule.pattern.value.test(formData[field])) {
-          fieldError = rule.pattern.message;
-          break;
-        }
-        if (rule.custom && !rule.custom.validator(formData[field])) {
-          fieldError = rule.custom.message;
-          break;
-        }
-      }
-
-      if (fieldError) {
-        newErrors[field] = fieldError;
-        isValid = false;
+    Object.keys(values).forEach(key => {
+      const error = validateField(key, values[key]);
+      if (error) {
+        newErrors[key] = error;
       }
     });
 
     setErrors(newErrors);
-    return isValid;
-  }, [validationRules]);
+    return Object.keys(newErrors).length === 0;
+  }, [values, validateField]);
 
-  const clearError = useCallback((field) => {
-    setErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
-  }, []);
+  const setFieldValue = useCallback((name, value) => {
+    setValues(prev => ({
+      ...prev,
+      [name]: value
+    }));
 
-  const clearErrors = useCallback(() => {
+    // Validate field on change
+    const error = validateField(name, value);
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  }, [validateField]);
+
+  const reset = useCallback(() => {
+    setValues(initialValues);
     setErrors({});
-  }, []);
+  }, [initialValues]);
+
+  const isValid = useMemo(() => {
+    return Object.keys(errors).length === 0;
+  }, [errors]);
 
   return {
+    values,
     errors,
+    validate,
     validateField,
-    validateForm,
-    clearError,
-    clearErrors
+    setFieldValue,
+    reset,
+    isValid
   };
 };
