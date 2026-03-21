@@ -45,8 +45,8 @@ const CustomerRegister = () => {
             try {
                 await registerCustomer(values.name, values.email, values.password);
                 window.dispatchEvent(new Event('authchange'));
-                toast.success('Account created! Welcome to Hatemalo! 🎉');
-                navigate('/my-orders');
+                toast.success('Account created! Welcome to Hatemalo!');
+                navigate('/login');
             } catch (error) {
                 const msg = error || 'Registration failed';
                 setAuthError(msg);

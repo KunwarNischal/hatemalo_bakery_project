@@ -1,15 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Share2 } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { getProductById } from '../../services/productService';
 import { INITIAL_PRODUCTS, CATEGORIES, formatPrice } from '../../assets/data';
 
-const ProductDetails = () => {
+const ProductDetails = ({ products = INITIAL_PRODUCTS }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
+
+  // Get related products intelligently
+  const relatedProducts = useMemo(() => {
+    if (!product || !products) return [];
+
+    // First, try to get products from same category
+    let related = products.filter(p => 
+      p.category === product.category && p._id !== product._id && p.id !== product.id
+    );
+
+    // If less than 4 products in same category, supplement with featured products
+    if (related.length < 4) {
+      const featured = products.filter(p => 
+        p.featured && p._id !== product._id && p.id !== product.id
+      );
+      related = [...related, ...featured].slice(0, 4);
+    }
+
+    // If still less than 4, add any other products
+    if (related.length < 4) {
+      const others = products.filter(p => 
+        p._id !== product._id && p.id !== product.id && !related.find(r => r._id === p._id)
+      );
+      related = [...related, ...others].slice(0, 4);
+    }
+
+    return related;
+  }, [product, products]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -18,17 +46,19 @@ const ProductDetails = () => {
       if (data) {
         setProduct(data);
       } else {
-        // Fallback to static data
-        const p = INITIAL_PRODUCTS.find(item => item.id === parseInt(id));
+        // Fallback to dynamic products prop
+        const p = products.find(item => item._id === id || item.id === parseInt(id));
         if (p) {
           setProduct(p);
         } else {
           navigate('/menu');
         }
       }
+      // Scroll to top when product changes
+      window.scrollTo(0, 0);
     };
     fetchProduct();
-  }, [id, navigate]);
+  }, [id, navigate, products]);
 
   if (!product) return <div className="p-20 text-center animate-pulse">Loading treat...</div>;
 
@@ -110,19 +140,25 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      {/* Related Products Section (Static for now) */}
-      <div className="mt-32">
-        <h3 className="font-display text-3xl font-bold text-primary mb-12 italic">You might also enjoy...</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {INITIAL_PRODUCTS.filter(p => p.categoryId === product.categoryId && p.id !== product.id).slice(0, 4).map(p => (
-            <div key={p.id} onClick={() => navigate(`/product/${p.id}`)} className="bg-cardBg p-6 rounded-3xl border border-primary/5 hover:shadow-lg transition-all cursor-pointer group text-center">
-              <span className="text-4xl block mb-4 group-hover:scale-110 transition-transform">{p.icon}</span>
-              <h4 className="font-bold text-primary text-sm mb-1">{p.name}</h4>
-              <p className="text-secondary font-bold text-xs">{formatPrice(p.price)}</p>
-            </div>
-          ))}
+      {/* Related Products Section */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-32">
+          <h3 className="font-display text-3xl font-bold text-primary mb-12 italic">You might also enjoy...</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {relatedProducts.map(p => (
+              <div key={p._id || p.id} onClick={() => navigate(`/product/${p._id || p.id}`)} className="bg-cardBg p-6 rounded-3xl border border-primary/5 hover:shadow-lg transition-all cursor-pointer group text-center">
+                {p.image ? (
+                  <img src={p.image} alt={p.name} className="w-full h-32 object-cover rounded-xl mb-4 group-hover:scale-110 transition-transform" />
+                ) : (
+                  <span className="text-4xl block mb-4 group-hover:scale-110 transition-transform">{p.icon}</span>
+                )}
+                <h4 className="font-bold text-primary text-sm mb-1">{p.name}</h4>
+                <p className="text-secondary font-bold text-xs">Rs. {p.price}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

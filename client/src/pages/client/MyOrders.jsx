@@ -19,6 +19,8 @@ const MyOrders = () => {
     useEffect(() => {
         // Check if customer is logged in
         const customerInfo = getCustomerInfo();
+        console.log('Customer logged in:', customerInfo); // Debug
+        
         if (!customerInfo) {
             navigate('/login');
             return;
@@ -38,11 +40,20 @@ const MyOrders = () => {
     const fetchMyOrders = async () => {
         setLoading(true);
         try {
+            console.log('Fetching orders for customer:', getCustomerInfo()?._id); // Debug
             const response = await api.get('/orders/myorders');
+            console.log('Orders received:', response.data); // Debug
             setOrders(response.data || []);
         } catch (error) {
             console.error('Error fetching orders:', error);
-            toast.error('Failed to load your orders');
+            // Check if it's a 401 error
+            if (error.response?.status === 401) {
+                console.error('Token validation failed - customer may not be authenticated');
+                toast.error('Session expired. Please login again.');
+                navigate('/login');
+            } else {
+                toast.error('Failed to load your orders');
+            }
         } finally {
             setLoading(false);
         }

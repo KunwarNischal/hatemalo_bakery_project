@@ -38,6 +38,8 @@ const addOrderItems = async (req, res) => {
             deliveryFee,
         } = req.body;
 
+        console.log('Creating order for user:', req.user ? req.user._id : 'Guest');
+
         if (orderItems && orderItems.length === 0) {
             res.status(400).json({ message: 'No order items' });
             return;
@@ -57,10 +59,12 @@ const addOrderItems = async (req, res) => {
             });
 
             const createdOrder = await order.save();
+            console.log('Order created with userId:', createdOrder.userId);
 
             res.status(201).json(createdOrder);
         }
     } catch (error) {
+        console.error('Order creation error:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -70,9 +74,20 @@ const addOrderItems = async (req, res) => {
 // @access  Private
 const getMyOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        console.log('Fetching orders for user:', req.user._id, 'email:', req.user.email);
+        
+        // Find orders by userId OR by customer email (for backward compatibility with orders that don't have userId)
+        const orders = await Order.find({
+            $or: [
+                { userId: req.user._id },
+                { 'customerDetails.email': req.user.email }
+            ]
+        }).sort({ createdAt: -1 });
+        
+        console.log('Found', orders.length, 'orders for user');
         res.json(orders);
     } catch (error) {
+        console.error('Error fetching myorders:', error);
         res.status(500).json({ message: error.message });
     }
 };

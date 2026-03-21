@@ -3,37 +3,39 @@
  * Manages form state, validation, and submission
  * 
  * @description Complete form management including state, validation, and submission handlers
- * @param {Object} initialValues - Initial form field values
- * @param {Function} onSubmit - Callback function when form is submitted
- * @param {Object} validate - Validation rules object
+ * @param {Object} options - Configuration object
+ * @param {Object} options.initialValues - Initial form field values
+ * @param {Function} options.onSubmit - Callback function when form is submitted
+ * @param {Object} options.validations - Validation rules object (field: validationFunction)
  * 
- * @returns {Object} { values, errors, touched, handleChange, handleBlur, handleSubmit, resetForm, setFieldValue }
+ * @returns {Object} { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit, resetForm, setFieldValue }
  * 
  * @example
- * const { values, errors, handleChange, handleSubmit } = useForm(
- *   { email: '', password: '' },
- *   async (values) => { await api.post('/login', values); },
- *   {
+ * const form = useForm({
+ *   initialValues: { email: '', password: '' },
+ *   validations: {
  *     email: (value) => !value ? 'Email required' : !value.includes('@') ? 'Invalid email' : '',
  *     password: (value) => !value ? 'Password required' : value.length < 6 ? 'Min 6 characters' : ''
- *   }
- * );
+ *   },
+ *   onSubmit: async (values) => { await api.post('/login', values); }
+ * });
  */
 
 import { useState, useCallback } from 'react';
 
-export const useForm = (initialValues, onSubmit, validate = {}) => {
+export const useForm = (options = {}) => {
+  const { initialValues = {}, onSubmit = () => {}, validations = {} } = options;
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateField = useCallback((name, value) => {
-    if (validate[name]) {
-      return validate[name](value);
+    if (validations[name]) {
+      return validations[name](value);
     }
     return '';
-  }, [validate]);
+  }, [validations]);
 
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;

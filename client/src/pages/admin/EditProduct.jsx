@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, XCircle, Loader2 } from 'lucide-react';
 import api, { getImageUrl } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -10,6 +10,7 @@ const EditProduct = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuthenticated } = useAuthCheck('admin', { redirectTo: '/admin' });
+    const { refetchProducts } = useOutletContext();
 
     // UI states
     const [uploading, setUploading] = useState(false);
@@ -17,7 +18,7 @@ const EditProduct = () => {
     // Form state
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
-    const [category, setCategory] = useState('');
+    const [categoryId, setCategoryId] = useState('');
     const [stock, setStock] = useState('');
     const [description, setDescription] = useState('');
     const [image, setImage] = useState(null);
@@ -44,18 +45,23 @@ const EditProduct = () => {
         if (productData) {
             setName(productData.name);
             setPrice(productData.price);
-            setCategory(productData.category);
+            // Handle both categoryId and category name from backend
+            if (productData.categoryId) {
+                setCategoryId(productData.categoryId);
+            } else if (productData.category) {
+                // If backend returns category name, find the matching ID
+                const foundCategory = categories.find(cat => cat.name === productData.category);
+                if (foundCategory) {
+                    setCategoryId(foundCategory._id);
+                }
+            }
             setStock(productData.stock);
             setDescription(productData.description);
             if (productData.image) {
                 setImagePreview(getImageUrl(productData.image));
             }
         }
-    }, [productData]);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [productData, categories]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -72,10 +78,16 @@ const EditProduct = () => {
     const handleUpdateProduct = async (e) => {
         e.preventDefault();
         setUploading(true);
+        
+        // Find the selected category object to get its name
+        const selectedCategory = categories.find(cat => cat._id === categoryId);
+        const categoryName = selectedCategory?.name || '';
+        
         const formData = new FormData();
         formData.append('name', name);
         formData.append('price', price);
-        formData.append('category', category);
+        formData.append('categoryId', categoryId);
+        formData.append('category', categoryName);
         formData.append('stock', stock);
         formData.append('description', description);
         if (image) {
@@ -87,10 +99,11 @@ const EditProduct = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             toast.success(`${name} updated successfully!`, {
-                icon: '✏️',
                 style: { borderRadius: '16px', background: '#3d2b1f', color: '#fff' }
             });
-            navigate('/admin/dashboard', { state: { activeTab: 'products' } });
+            // Refetch products to update the list
+            await refetchProducts();
+            navigate('/admin/products');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to update product');
         } finally {
@@ -98,7 +111,7 @@ const EditProduct = () => {
         }
     };
 
-    if (loading) {
+    if (productLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
@@ -114,7 +127,7 @@ const EditProduct = () => {
             <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/admin/dashboard', { state: { activeTab: 'products' } })} className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-gray-500 hover:text-dark-brown cursor-pointer">
+                        <button onClick={() => navigate('/admin/products')} className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-gray-500 hover:text-dark-brown cursor-pointer">
                             <ArrowLeft size={24} />
                         </button>
                         <div>
@@ -124,10 +137,10 @@ const EditProduct = () => {
                     </div>
                 </div>
 
-                {error && (
+                {productError && (
                     <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-2xl flex items-center gap-2">
                         <XCircle size={20} />
-                        {error}
+                        {productError}
                     </div>
                 )}
 
@@ -164,10 +177,10 @@ const EditProduct = () => {
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Category</label>
                                     <select
-                                        value={category} onChange={(e) => setCategory(e.target.value)}
+                                        value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
                                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-light-brown bg-white"
                                     >
-                                        {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+                                        {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
                                     </select>
                                 </div>
 

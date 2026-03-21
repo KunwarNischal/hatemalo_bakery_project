@@ -140,27 +140,50 @@ const Navbar = ({ setIsCartOpen }) => {
             <div ref={profileRef} className="relative">
               <button 
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="p-2 text-primary group hover:bg-primary/5 rounded-lg transition-all"
+                className="px-4 py-2 bg-gradient-to-r from-light-brown to-secondary text-white rounded-full transition-all flex items-center gap-2 font-bold text-sm shadow-lg hover:shadow-xl hover:from-dark-brown hover:to-secondary hover:-translate-y-0.5 duration-300"
                 title="Profile"
               >
-                <UserCircle size={24} />
+                <UserCircle size={18} className="text-white/90" />
+                <span className="hidden sm:inline">{customerInfo.name}</span>
               </button>
               
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-primary/10 rounded-lg shadow-xl z-50 overflow-hidden">
-                  <Link 
-                    to="/my-orders" 
-                    onClick={() => setIsProfileOpen(false)}
-                    className="block px-6 py-3 text-primary hover:bg-primary/5 transition-colors font-bold text-sm flex items-center gap-2 border-b border-primary/10"
-                  >
-                    <Package size={18} /> My Orders
-                  </Link>
-                  <button 
-                    onClick={handleCustomerLogout}
-                    className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50 transition-colors font-bold text-sm flex items-center gap-2"
-                  >
-                    <LogOut size={18} /> Logout
-                  </button>
+                <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-gray-100 animate-fade-in-up">
+                  {/* Profile Header */}
+                  <div className="bg-gradient-to-r from-light-brown/10 to-secondary/10 px-6 py-5 border-b border-gray-100">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <div className="p-3 bg-light-brown/20 rounded-full text-light-brown">
+                        <UserCircle size={32} />
+                      </div>
+                      <div className="w-full">
+                        <p className="font-bold text-dark-brown text-base leading-tight truncate">{customerInfo.name}</p>
+                        <p className="text-xs text-gray-500 break-words mt-1">{customerInfo.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Menu Items */}
+                  <div className="py-2">
+                    <Link 
+                      to="/my-orders" 
+                      onClick={() => setIsProfileOpen(false)}
+                      className={`block px-6 py-3 font-bold text-sm flex items-center gap-3 group transition-colors rounded-lg mx-2 ${
+                        location.pathname === '/my-orders'
+                          ? 'bg-gradient-to-r from-light-brown/20 to-secondary/20 text-dark-brown border-l-4 border-light-brown'
+                          : 'text-dark-brown hover:bg-light-brown/10'
+                      }`}
+                    >
+                      <Package size={18} className={`${location.pathname === '/my-orders' ? 'text-dark-brown font-bold' : 'text-light-brown group-hover:text-dark-brown'}`} /> 
+                      <span>My Orders</span>
+                    </Link>
+                    <button 
+                      onClick={handleCustomerLogout}
+                      className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50 transition-colors font-bold text-sm flex items-center gap-3 group"
+                    >
+                      <LogOut size={18} className="text-red-500 group-hover:text-red-700" /> 
+                      <span>Logout</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

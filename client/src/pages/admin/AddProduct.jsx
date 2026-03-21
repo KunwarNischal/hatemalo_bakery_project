@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, XCircle } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -9,6 +9,7 @@ import { useFetchData } from '../../hooks/useFetchData';
 const AddProduct = () => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuthCheck('admin', { redirectTo: '/admin' });
+    const { refetchProducts } = useOutletContext();
     const [uploading, setUploading] = useState(false);
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -16,7 +17,7 @@ const AddProduct = () => {
     // Form state
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
-    const [category, setCategory] = useState('');
+    const [categoryId, setCategoryId] = useState('');
     const [stock, setStock] = useState('');
     const [description, setDescription] = useState('');
 
@@ -30,10 +31,10 @@ const AddProduct = () => {
 
     // Set default category when categories load
     useEffect(() => {
-        if (categories.length > 0 && !category) {
-            setCategory(categories[0].name);
+        if (categories.length > 0 && !categoryId) {
+            setCategoryId(categories[0]._id);
         }
-    }, [categories, category]);
+    }, [categories, categoryId]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -50,10 +51,16 @@ const AddProduct = () => {
     const handleCreateProduct = async (e) => {
         e.preventDefault();
         setUploading(true);
+        
+        // Find the selected category object to get its name
+        const selectedCategory = categories.find(cat => cat._id === categoryId);
+        const categoryName = selectedCategory?.name || '';
+        
         const formData = new FormData();
         formData.append('name', name);
         formData.append('price', price);
-        formData.append('category', category);
+        formData.append('categoryId', categoryId);
+        formData.append('category', categoryName);
         formData.append('stock', stock);
         formData.append('description', description);
         if (image) {
@@ -64,11 +71,12 @@ const AddProduct = () => {
             await api.post('/products', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            toast.success(`${name} created successfully!`, {
-                icon: '🧁',
+            toast.success('Product Created Successfully!', {
                 style: { borderRadius: '16px', background: '#3d2b1f', color: '#fff' }
             });
-            navigate('/admin/dashboard', { state: { activeTab: 'products' } });
+            // Refetch products to update the list
+            await refetchProducts();
+            navigate('/admin/products');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to create product');
         } finally {
@@ -81,7 +89,7 @@ const AddProduct = () => {
             <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/admin/dashboard', { state: { activeTab: 'products' } })} className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-gray-500 hover:text-dark-brown cursor-pointer">
+                        <button onClick={() => navigate('/admin/products')} className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-gray-500 hover:text-dark-brown cursor-pointer">
                             <ArrowLeft size={24} />
                         </button>
                         <div>
@@ -127,10 +135,10 @@ const AddProduct = () => {
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Category</label>
                                     <select
-                                        value={category} onChange={(e) => setCategory(e.target.value)}
+                                        value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
                                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-light-brown bg-white"
                                     >
-                                        {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+                                        {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
                                     </select>
                                 </div>
 
@@ -189,7 +197,7 @@ const AddProduct = () => {
                         <div className="mt-12 pt-8 border-t border-gray-100 flex gap-4">
                             <button
                                 type="button"
-                                onClick={() => navigate('/admin/dashboard', { state: { activeTab: 'products' } })}
+                                onClick={() => navigate('/admin/products')}
                                 className="flex-1 py-4 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all border border-gray-200 text-center"
                             >
                                 Discard Changes

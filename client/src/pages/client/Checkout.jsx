@@ -45,9 +45,6 @@ const Checkout = () => {
       { required: 'Phone number is required' },
       { pattern: { value: /^\d{10}/, message: 'Please enter a valid phone number' } }
     ],
-    street: [
-      { required: 'Street address is required' }
-    ],
     city: [
       { required: 'City is required' }
     ]
@@ -152,15 +149,25 @@ const Checkout = () => {
         totalAmount: total,
       };
 
-      await api.post('/orders', orderData);
+      console.log('Customer info:', getCustomerInfo()); // Debug: Check if customer is logged in
+      console.log('Submitting order:', orderData); // Debug: Log order data
 
-      addToast('Order placed successfully! 🎉');
+      const response = await api.post('/orders', orderData);
+      console.log('Order created:', response.data); // Debug: Log response
+
+      addToast('Order placed successfully!');
       clearCart();
       setIsSubmitting(false);
       navigate('/my-orders');
     } catch (error) {
       console.error('Checkout error:', error);
-      addToast('Failed to place order. Please try again.', 'error');
+      if (error.response?.status === 401) {
+        console.error('Not authenticated - token may be invalid');
+        addToast('Session expired. Please login again.', 'error');
+        navigate('/login');
+      } else {
+        addToast('Failed to place order. Please try again.', 'error');
+      }
       setIsSubmitting(false);
     }
   };

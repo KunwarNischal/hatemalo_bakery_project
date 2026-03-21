@@ -27,7 +27,7 @@ const Hero = () => {
       <div className="relative group p-4 md:p-0">
         <div className="absolute -inset-4 bg-primary/5 rounded-[3rem] blur-2xl group-hover:bg-primary/10 transition-colors"></div>
         <img 
-          src="/hatemalo_banner.png" 
+          src="/hatemalo-banner.jpg" 
           alt="Artisanal Bakery Banner" 
           className="relative w-full h-auto rounded-[2.5rem] shadow-2xl border-4 border-white/50 group-hover:scale-[1.02] transition-transform duration-700"
         />

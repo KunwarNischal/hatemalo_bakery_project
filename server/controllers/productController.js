@@ -34,7 +34,7 @@ const getProductById = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
     try {
-        const { name, price, description, category, stock } = req.body;
+        const { name, price, description, category, categoryId, stock } = req.body;
         let image = '';
 
         if (req.file) {
@@ -46,6 +46,7 @@ const createProduct = async (req, res) => {
             price: price || 0,
             description: description || 'Sample description',
             category: category || 'Sample category',
+            categoryId: categoryId || 0,
             stock: stock || 0,
             image: image || '/images/sample.jpg',
         });
@@ -62,7 +63,7 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
     try {
-        const { name, price, description, category, stock } = req.body;
+        const { name, price, description, category, categoryId, stock } = req.body;
 
         const product = await Product.findById(req.params.id);
 
@@ -71,6 +72,7 @@ const updateProduct = async (req, res) => {
             product.price = price || product.price;
             product.description = description || product.description;
             product.category = category || product.category;
+            product.categoryId = categoryId || product.categoryId;
             product.stock = stock || product.stock;
 
             if (req.file) {

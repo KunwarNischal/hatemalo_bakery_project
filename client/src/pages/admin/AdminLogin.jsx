@@ -28,11 +28,25 @@ const AdminLogin = () => {
             setAuthError('');
             try {
                 const { data } = await api.post('/auth/login', values);
-
+                console.log('Login response:', data); // Debug: Check what server returned
+                
                 if (data.isAdmin) {
-                    localStorage.setItem('userInfo', JSON.stringify(data));
+                    // Save admin token (don't clear customer token - allow both to coexist for multi-tab support)
+                    const adminData = {
+                        _id: data._id,
+                        name: data.name,
+                        email: data.email,
+                        isAdmin: data.isAdmin,
+                        token: data.token
+                    };
+                    localStorage.setItem('userInfo', JSON.stringify(adminData));
+                    console.log('Admin token saved:', adminData); // Debug: Verify it was saved
+                    
                     toast.success(`Welcome back, ${data.name}!`);
-                    navigate('/admin/dashboard');
+                    // Small delay to ensure token is properly registered before navigating
+                    setTimeout(() => {
+                        navigate('/admin/dashboard');
+                    }, 100);
                 } else {
                     const msg = 'Not authorized as an admin';
                     setAuthError(msg);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import api from '../services/api';
@@ -13,6 +13,18 @@ import { useAuthCheck } from '../hooks/useAuthCheck';
 const AdminLayout = () => {
     const navigate = useNavigate();
     useAuthCheck('admin', { redirectTo: '/admin' });
+    
+    // Verify token is in localStorage
+    useEffect(() => {
+        const adminToken = localStorage.getItem('userInfo');
+        if (!adminToken) {
+            console.warn('Admin token not found in localStorage');
+            toast.error('Session expired. Please login again.');
+            navigate('/admin');
+        } else {
+            console.log('Admin token found:', JSON.parse(adminToken)?.email || 'Unknown');
+        }
+    }, [navigate]);
     
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [products, setProducts] = useState([]);
@@ -30,28 +42,45 @@ const AdminLayout = () => {
     const [stockFilter, setStockFilter] = useState('all');
 
     // Use custom hooks for data fetching
-    const { data: fetchedProducts, loading: productsLoading, error: productsError } = useFetchData(
+    const { data: fetchedProducts, loading: productsLoading, error: productsError, refetch: refetchProducts } = useFetchData(
         () => api.get('/products').then(res => res.data),
         [],
         null,
         { initialData: [] }
     );
 
-    const { data: fetchedOrders, loading: ordersLoading, error: ordersError } = useFetchData(
+    const { data: fetchedOrders, loading: ordersLoading, error: ordersError, refetch: refetchOrders } = useFetchData(
         () => api.get('/orders').then(res => res.data),
         [],
         null,
         { initialData: [] }
     );
 
-    const { data: fetchedCategories, loading: categoriesLoading, error: categoriesError } = useFetchData(
+    const { data: fetchedCategories, loading: categoriesLoading, error: categoriesError, refetch: refetchCategories } = useFetchData(
         () => api.get('/categories').then(res => res.data),
         [],
         null,
         { initialData: [] }
     );
 
-    // Combined loading and error states
+    // Sync fetched data to local state
+    useEffect(() => {
+        if (fetchedProducts && fetchedProducts.length > 0) {
+            setProducts(fetchedProducts);
+        }
+    }, [fetchedProducts]);
+
+    useEffect(() => {
+        if (fetchedOrders && fetchedOrders.length > 0) {
+            setOrders(fetchedOrders);
+        }
+    }, [fetchedOrders]);
+
+    useEffect(() => {
+        if (fetchedCategories && fetchedCategories.length > 0) {
+            setCategories(fetchedCategories);
+        }
+    }, [fetchedCategories]);
     const loading = productsLoading || ordersLoading || categoriesLoading;
     const error = productsError || ordersError || categoriesError;
 
@@ -72,13 +101,11 @@ const AdminLayout = () => {
             }
         },
         {
-            onSuccess: (result, type) => {
-                toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`, {
-                    style: { borderRadius: '16px', background: '#3d2b1f', color: '#fff' }
-                });
+            onSuccess: (result) => {
+                // Type is passed separately in handleDeleteConfirm
             },
-            onError: (error, type) => {
-                toast.error(error.response?.data?.message || `Failed to delete ${type}`);
+            onError: (error) => {
+                // Type information is available in deleteModal state (handled in handleDeleteConfirm)
             }
         }
     );
@@ -115,7 +142,22 @@ const AdminLayout = () => {
 
     const handleDeleteConfirm = async () => {
         const { type, id } = deleteModal;
-        await executeDelete(id, type);
+        try {
+            await executeDelete(id, type);
+            toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`, {
+                style: { borderRadius: '16px', background: '#3d2b1f', color: '#fff' }
+            });
+            // Refetch to sync with server
+            if (type === 'category') {
+                await refetchCategories();
+            } else if (type === 'product') {
+                await refetchProducts();
+            } else if (type === 'order') {
+                await refetchOrders();
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || `Failed to delete ${type}`);
+        }
         setDeleteModal({ ...deleteModal, isOpen: false });
     };
 
@@ -131,13 +173,13 @@ const AdminLayout = () => {
         try {
             if (isCategoryEdit) {
                 const { data } = await api.put(`/categories/${editingCategory._id}`, { name: newCategory });
-                setCategories(categories.map(cat => cat._id === editingCategory._id ? data : cat));
                 toast.success('Category updated!');
             } else {
                 const { data } = await api.post('/categories', { name: newCategory });
-                setCategories([...categories, data]);
                 toast.success('Category created!');
             }
+            // Refetch categories to get the latest list from server
+            await refetchCategories();
             setNewCategory('');
             setSearchTerm('');
             setIsCategoryModalOpen(false);
@@ -175,7 +217,10 @@ const AdminLayout = () => {
         handleDeleteCategory,
         handleEditCategoryClick,
         setIsCategoryModalOpen,
-        setOrders
+        setOrders,
+        refetchProducts,
+        refetchOrders,
+        refetchCategories
     };
 
     return (
@@ -190,9 +235,21 @@ const AdminLayout = () => {
             {/* Main Content */}
             <div className="flex-1 p-4 md:p-8">
                 {error && (
-                    <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-2">
-                        <AlertCircle size={20} />
-                        {error}
+                    <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle size={20} />
+                            <div>
+                                <p className="font-semibold">Error loading data</p>
+                                <p className="text-sm">{error}</p>
+                                {error.includes('401') && <p className="text-xs mt-1">Your session may have expired. Try logging in again.</p>}
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap text-sm font-medium"
+                        >
+                            Retry
+                        </button>
                     </div>
                 )}
 

@@ -31,7 +31,7 @@ const AppRoutes = ({ products, categories }) => {
       <Routes>
         <Route path="/" element={<Home products={products} categories={categories} onCategorySelect={handleCategorySelect} />} />
         <Route path="/menu" element={<Menu products={products} categories={categories} selectedCategory={selectedCategory} />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/product/:id" element={<ProductDetails products={products} />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/story" element={<Story />} />
         <Route path="/checkout" element={<Checkout />} />
@@ -44,12 +44,11 @@ const AppRoutes = ({ products, categories }) => {
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/products" element={<ProductsManagement />} />
+          <Route path="/admin/products/add" element={<AddProduct />} />
+          <Route path="/admin/products/edit/:id" element={<EditProduct />} />
           <Route path="/admin/orders" element={<OrdersManagement />} />
           <Route path="/admin/categories" element={<CategoriesManagement />} />
         </Route>
-
-        <Route path="/admin/products/add" element={<AddProduct />} />
-        <Route path="/admin/products/edit/:id" element={<EditProduct />} />
       </Routes>
     </Suspense>
   );

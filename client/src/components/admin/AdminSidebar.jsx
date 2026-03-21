@@ -5,7 +5,11 @@ import { BarChart3, Package, ShoppingBag, LogOut, Layers, Menu, X } from 'lucide
 const AdminSidebar = ({ setIsMenuOpen, isMenuOpen, handleLogout }) => {
   const location = useLocation();
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    // Exact match or check if current path starts with the nav path
+    // For products: /admin/products, /admin/products/add, /admin/products/edit/:id all highlight Products
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -24,7 +28,7 @@ const AdminSidebar = ({ setIsMenuOpen, isMenuOpen, handleLogout }) => {
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-[100]">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="h-8 w-8 rounded-full object-cover" />
-          <span className="font-bold text-dark-brown">Admin Panel</span>
+          <span className="font-bold text-dark-brown">Hatemalo Bakery</span>
         </div>
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -41,7 +45,7 @@ const AdminSidebar = ({ setIsMenuOpen, isMenuOpen, handleLogout }) => {
       `}>
         <Link to="/" className="hidden md:flex items-center gap-2 mb-10 overflow-hidden hover:opacity-80 transition-opacity">
           <img src="/logo.png" alt="Logo" className="h-10 w-10 rounded-full object-cover shrink-0" />
-          <span className="font-bold text-lg text-dark-brown truncate">HateMalo Bakery</span>
+          <span className="font-bold text-lg text-dark-brown truncate">Hatemalo Bakery</span>
         </Link>
 
         <nav className="flex-1 space-y-2">

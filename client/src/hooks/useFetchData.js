@@ -38,7 +38,7 @@ export const useFetchData = (
       const result = await fetchFn();
       setData(result);
     } catch (err) {
-      const errorMsg = err.message || options.errorMessage || 'Failed to fetch data';
+      const errorMsg = err.response?.data?.message || err.message || options.errorMessage || 'Failed to fetch data';
       setError(errorMsg);
       if (onError) {
         onError(err);

@@ -32,7 +32,7 @@ const CustomerLogin = () => {
             try {
                 await loginCustomer(values.email, values.password);
                 window.dispatchEvent(new Event('authchange'));
-                toast.success('Welcome back! 🎉');
+                toast.success('Welcome back!');
                 navigate('/my-orders');
             } catch (error) {
                 const msg = error || 'Login failed';

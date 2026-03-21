@@ -101,7 +101,7 @@ const ProductsManagement = () => {
                         />
                       </div>
                       <div>
-                        <p className="font-bold text-dark-brown text-sm">{product.name}</p>
+                        <p className="font-bold text-dark-brown text-lg">{product.name}</p>
                         <p className="text-xs text-gray-400 line-clamp-1 max-w-[220px]">{product.description}</p>
                       </div>
                     </div>

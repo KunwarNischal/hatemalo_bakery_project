@@ -5,6 +5,7 @@ export const loginCustomer = async (email, password) => {
     try {
         const response = await api.post('/auth/login', { email, password });
         if (response.data) {
+            // Don't clear admin token - allow both to coexist for multi-tab support
             localStorage.setItem('customerInfo', JSON.stringify(response.data));
         }
         return response.data;
@@ -18,6 +19,7 @@ export const registerCustomer = async (name, email, password) => {
     try {
         const response = await api.post('/auth/register', { name, email, password });
         if (response.data) {
+            // Don't clear admin token - allow both to coexist for multi-tab support
             localStorage.setItem('customerInfo', JSON.stringify(response.data));
         }
         return response.data;
