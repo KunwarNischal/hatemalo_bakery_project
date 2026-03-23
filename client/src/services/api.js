@@ -18,7 +18,117 @@ import axios from 'axios';
 
 /**
  * ============================================================================
- * 1. CREATE AXIOS INSTANCE
+ * 0. CONFIGURATION CONSTANTS
+ * ============================================================================
+ *
+ * Centralized configuration to avoid hardcoding values throughout the file
+ * Makes it easy to change URLs, keys, and routes in one place
+ */
+const API_BASE_URL = 'http://localhost:5000';
+const API_ENDPOINT = '/api';
+
+// Storage keys for localStorage operations (avoid typos, DRY principle)
+const STORAGE_KEYS = {
+  ADMIN_INFO: 'userInfo',
+  CUSTOMER_INFO: 'customerInfo',
+};
+
+// Admin routes that require authentication
+const ADMIN_ROUTES = ['/admin', '/products', '/categories', '/orders'];
+
+/**
+ * ============================================================================
+ * 1. HELPER FUNCTIONS (Defined before axios instance)
+ * ============================================================================
+ *
+ * These functions must be defined before the axios instance is created
+ * because they're used in the request interceptor
+ */
+
+/**
+ * Helper function: Check if a route is for admin operations
+ * Admin routes need admin authentication
+ */
+function isAdminAPIRoute(url) {
+  // Check if URL contains any admin route
+  const containsAdminRoute = ADMIN_ROUTES.some(route => url.includes(route));
+
+  // Special case: /orders/myorders is customer route, not admin
+  const isMyOrdersRoute = url.includes('/orders/myorders');
+
+  return containsAdminRoute && !isMyOrdersRoute;
+}
+
+/**
+ * Consolidated helper: Extract and validate token from localStorage
+ * This consolidates getAdminToken and getCustomerToken logic to eliminate duplication
+ *
+ * @param {string} storageKey - localStorage key to retrieve ('userInfo' or 'customerInfo')
+ * @param {boolean} requireAdmin - Whether we expect this to be an admin token (true) or customer (false)
+ * @returns {string|null} - The authentication token if valid, null otherwise
+ */
+function getTokenFromStorage(storageKey, requireAdmin) {
+  try {
+    // Get info from localStorage (stored as JSON string)
+    const dataJSON = localStorage.getItem(storageKey);
+
+    // If not found, return null
+    if (!dataJSON) return null;
+
+    // Parse the JSON string back to an object
+    const data = JSON.parse(dataJSON);
+
+    // Return token only if it exists and role matches what we expect
+    // For admin tokens: isAdmin must be true
+    // For customer tokens: isAdmin must be false
+    if (data.token && data.isAdmin === requireAdmin) {
+      return data.token;
+    }
+
+    return null;
+  } catch (error) {
+    // If parsing fails, return null (corrupted data or invalid format)
+    return null;
+  }
+}
+
+/**
+ * Legacy compatibility wrappers - kept for backward compatibility
+ * These now delegate to the consolidated getTokenFromStorage function
+ */
+function getAdminToken() {
+  return getTokenFromStorage(STORAGE_KEYS.ADMIN_INFO, true);
+}
+
+function getCustomerToken() {
+  return getTokenFromStorage(STORAGE_KEYS.CUSTOMER_INFO, false);
+}
+
+/**
+ * Helper function: Get the authentication token for the current route type
+ * Consolidates token retrieval logic to avoid duplication
+ */
+function getAuthTokenForRoute(isAdminRoute) {
+  if (isAdminRoute) {
+    // This is an admin route - try to get admin token first
+    const adminToken = getTokenFromStorage(STORAGE_KEYS.ADMIN_INFO, true);
+    if (adminToken) return adminToken;
+
+    // If no admin token, fallback to customer token
+    return getTokenFromStorage(STORAGE_KEYS.CUSTOMER_INFO, false);
+  } else {
+    // This is a customer route - try to get customer token first
+    const customerToken = getTokenFromStorage(STORAGE_KEYS.CUSTOMER_INFO, false);
+    if (customerToken) return customerToken;
+
+    // If no customer token, fallback to admin token
+    return getTokenFromStorage(STORAGE_KEYS.ADMIN_INFO, true);
+  }
+}
+
+/**
+ * ============================================================================
+ * 2. CREATE AXIOS INSTANCE
  * ============================================================================
  *
  * Axios is a library that makes HTTP requests (like fetching data from API)
@@ -27,7 +137,7 @@ import axios from 'axios';
 const api = axios.create({
   // baseURL: This is the starting URL for all API calls
   // So api.get('/products') becomes http://localhost:5000/api/products
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${API_BASE_URL}${API_ENDPOINT}`,
 
   // headers: Default headers sent with every request
   headers: {
@@ -37,7 +147,7 @@ const api = axios.create({
 
 /**
  * ============================================================================
- * 2. REQUEST INTERCEPTOR - Auto-attach authentication token
+ * 3. REQUEST INTERCEPTOR - Auto-attach authentication token
  * ============================================================================
  *
  * An interceptor runs BEFORE every API request
@@ -72,106 +182,10 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/**
- * Helper function: Check if a route is for admin operations
- * Admin routes need admin authentication
- */
-function isAdminAPIRoute(url) {
-  // These routes require admin authentication
-  const adminRoutes = [
-    '/admin',        // Admin pages
-    '/products',     // Create, edit, delete products (admin only)
-    '/categories',   // Create, edit, delete categories (admin only)
-    '/orders',       // View all orders (admin only) - but NOT /orders/myorders (customer)
-  ];
-
-  // Check if URL contains any admin route
-  const containsAdminRoute = adminRoutes.some(route => url.includes(route));
-
-  // Special case: /orders/myorders is customer route, not admin
-  const isMyOrdersRoute = url.includes('/orders/myorders');
-
-  return containsAdminRoute && !isMyOrdersRoute;
-}
-
-/**
- * Helper function: Get the authentication token for the current route type
- */
-function getAuthTokenForRoute(isAdminRoute) {
-  if (isAdminRoute) {
-    // This is an admin route - try to get admin token first
-    const adminToken = getAdminToken();
-    if (adminToken) return adminToken;
-
-    // If no admin token, fallback to customer token (shouldn't happen)
-    return getCustomerToken();
-  } else {
-    // This is a customer route - try to get customer token first
-    const customerToken = getCustomerToken();
-    if (customerToken) return customerToken;
-
-    // If no customer token, fallback to admin token (for multi-role users)
-    return getAdminToken();
-  }
-}
-
-/**
- * Helper function: Get admin authentication token from localStorage
- * localStorage is browser's local storage - data persists even after refresh
- */
-function getAdminToken() {
-  try {
-    // Get admin info from localStorage (stored as JSON string)
-    const adminInfoJSON = localStorage.getItem('userInfo');
-
-    // If not found, return null
-    if (!adminInfoJSON) return null;
-
-    // Parse the JSON string back to an object
-    const adminData = JSON.parse(adminInfoJSON);
-
-    // Return token only if user is admin
-    if (adminData.token && adminData.isAdmin) {
-      return adminData.token;
-    }
-
-    return null;
-  } catch (error) {
-    // If parsing fails, return null (corrupted data or invalid format)
-    return null;
-  }
-}
-
-/**
- * Helper function: Get customer authentication token from localStorage
- */
-function getCustomerToken() {
-  try {
-    // Get customer info from localStorage (stored as JSON string)
-    const customerInfoJSON = localStorage.getItem('customerInfo');
-
-    // If not found, return null
-    if (!customerInfoJSON) return null;
-
-    // Parse the JSON string back to an object
-    const customerData = JSON.parse(customerInfoJSON);
-
-    // Return token only if user is NOT admin (is customer)
-    if (customerData.token && !customerData.isAdmin) {
-      return customerData.token;
-    }
-
-    return null;
-  } catch (error) {
-    // If parsing fails, return null (corrupted data or invalid format)
-    return null;
-  }
-}
-
 
 /**
  * ============================================================================
- * 3. IMAGE URL HANDLING
+ * 4. IMAGE URL HANDLING
  * ============================================================================
  *
  * Products have images stored on the server. This section handles converting
@@ -191,7 +205,7 @@ export const PLACEHOLDER_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3
  * like "http://localhost:5000/uploads/image-123.jpg" to display them
  *
  * @param {string} imagePath - Image path from database
- * @returns {string} - Complete working URL to the image
+ * @returns {string} - Complete working URL to the image or placeholder if no image
  */
 export const getImageUrl = (imagePath) => {
   // If no image path provided, show the placeholder
@@ -205,8 +219,8 @@ export const getImageUrl = (imagePath) => {
     return imagePath;
   }
 
-  // Backend server address
-  const baseUrl = 'http://localhost:5000';
+  // Use centralized base URL instead of hardcoding
+  const baseUrl = API_BASE_URL;
 
   // Ensure path starts with / for proper URL format
   // "/uploads/image.jpg" stays as "/uploads/image.jpg"
@@ -230,7 +244,7 @@ export const getImageUrl = (imagePath) => {
 
 /**
  * ============================================================================
- * 4. AUTHENTICATION FUNCTIONS
+ * 5. AUTHENTICATION FUNCTIONS
  * ============================================================================
  *
  * These functions handle user login, registration, logout, and storing/retrieving
@@ -276,7 +290,7 @@ export const registerCustomer = async (name, email, password) => {
     // If successful, save customer info to browser storage
     // Why? So user stays logged in even after page refresh
     if (data) {
-      localStorage.setItem('customerInfo', JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEYS.CUSTOMER_INFO, JSON.stringify(data));
     }
 
     // Return the customer data (token, name, email, isAdmin flag)
@@ -316,7 +330,7 @@ export const loginCustomer = async (email, password) => {
 
     // If successful, save customer info to browser storage
     if (data) {
-      localStorage.setItem('customerInfo', JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEYS.CUSTOMER_INFO, JSON.stringify(data));
     }
 
     // Return the customer data
@@ -353,20 +367,20 @@ export const verifyCustomer = async (token) => {
 
     // If valid, update customer info in storage
     if (data) {
-      localStorage.setItem('customerInfo', JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEYS.CUSTOMER_INFO, JSON.stringify(data));
     }
 
     return data;
   } catch (error) {
     // If token is invalid or expired, remove it from storage
     // This effectively logs the user out
-    localStorage.removeItem('customerInfo');
+    localStorage.removeItem(STORAGE_KEYS.CUSTOMER_INFO);
     return null;
   }
 };
 
 /**
- * logoutCustomer: Log out the current customer
+ * logoutCustomer: Log out the current customer (Side-effect function)
  *
  * What it does:
  * 1. Deletes customer info from browser storage
@@ -376,12 +390,15 @@ export const verifyCustomer = async (token) => {
  * Why simple? Logout only needs to clear local storage.
  * The backend doesn't need to do anything.
  *
+ * Note: This function performs a side effect (removing data from localStorage)
+ * but does not return a value. Components should handle UI updates separately.
+ *
  * Example usage:
  * logoutCustomer(); // User is now logged out
  */
 export const logoutCustomer = () => {
   // Remove all customer data from browser storage
-  localStorage.removeItem('customerInfo');
+  localStorage.removeItem(STORAGE_KEYS.CUSTOMER_INFO);
 
   // After this, future API requests won't include a token
   // So backend will treat subsequent requests as "not authenticated"
@@ -410,7 +427,7 @@ export const logoutCustomer = () => {
 export const getCustomerInfo = () => {
   try {
     // Get customer info from browser storage (stored as JSON string)
-    const customerInfoJSON = localStorage.getItem('customerInfo');
+    const customerInfoJSON = localStorage.getItem(STORAGE_KEYS.CUSTOMER_INFO);
 
     // If no info found, return null (user not logged in)
     if (!customerInfoJSON) {
@@ -427,7 +444,7 @@ export const getCustomerInfo = () => {
 
 /**
  * ============================================================================
- * 5. PRODUCT FUNCTIONS
+ * 6. PRODUCT FUNCTIONS
  * ============================================================================
  *
  * These functions fetch product data from the backend API and process it
@@ -457,26 +474,12 @@ export const getProducts = async () => {
     // Request all products from backend
     const { data } = await api.get('/products');
 
-    // Process each product to fix image URLs
-    return data.map((product) => {
-      // Check if image is already a full URL
-      const isFullUrl = product.image?.startsWith('http');
-
-      let processedImageUrl = product.image; // Default to existing value
-
-      // If not a full URL, build one
-      if (!isFullUrl && product.image) {
-        const imageFileName = product.image.startsWith('/') ? product.image : `/${product.image}`;
-        processedImageUrl = `http://localhost:5000${imageFileName}`;
-      }
-
-      // Return product with corrected image URL and standardized id field
-      return {
-        ...product, // Keep all existing fields
-        id: product._id || product.id, // Ensure 'id' field exists (sometimes it's '_id')
-        image: processedImageUrl, // Replace image with full URL
-      };
-    });
+    // Process each product to fix image URLs using centralized getImageUrl function
+    return data.map((product) => ({
+      ...product,                      // Keep all existing fields
+      id: product._id || product.id,   // Ensure 'id' field exists (sometimes it's '_id')
+      image: getImageUrl(product.image), // Replace image with full URL using centralized function
+    }));
   } catch (error) {
     // If request fails, log error and return empty array
     console.error('Error fetching products:', error);
@@ -507,22 +510,12 @@ export const getProductById = async (productId) => {
     // Request specific product from backend using its ID
     const { data } = await api.get(`/products/${productId}`);
 
-    // Check if image needs URL processing
-    const isFullUrl = data.image?.startsWith('http');
-
-    let processedImageUrl = data.image; // Default to existing value
-
-    // If not a full URL, build one
-    if (!isFullUrl && data.image) {
-      const imageFileName = data.image.startsWith('/') ? data.image : `/${data.image}`;
-      processedImageUrl = `http://localhost:5000${imageFileName}`;
-    }
-
     // Return product with corrected image URL and standardized id field
+    // Uses centralized getImageUrl function to avoid duplication
     return {
-      ...data, // Keep all existing fields
-      id: data._id || data.id, // Ensure 'id' field exists
-      image: processedImageUrl, // Replace image with full URL
+      ...data,                        // Keep all existing fields
+      id: data._id || data.id,        // Ensure 'id' field exists
+      image: getImageUrl(data.image), // Replace image with full URL using centralized function
     };
   } catch (error) {
     // If request fails or product not found, log error and return null
@@ -533,7 +526,7 @@ export const getProductById = async (productId) => {
 
 /**
  * ============================================================================
- * 6. CATEGORY FUNCTIONS
+ * 7. CATEGORY FUNCTIONS
  * ============================================================================
  *
  * Categories organize products (Breads, Cakes, Cookies, etc.)
@@ -569,7 +562,7 @@ export const getCategories = async () => {
 
 /**
  * ============================================================================
- * 7. ORDER FUNCTIONS
+ * 8. ORDER FUNCTIONS
  * ============================================================================
  *
  * Orders are placed by customers and managed by admins
@@ -609,7 +602,7 @@ export const updateOrderStatus = async (orderId, status) => {
 
 /**
  * ============================================================================
- * 8. EXPORT MAIN API INSTANCE
+ * 9. EXPORT MAIN API INSTANCE
  * ============================================================================
  *
  * Export the main axios instance so components can use it for other API calls
