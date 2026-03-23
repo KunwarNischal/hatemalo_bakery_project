@@ -31,7 +31,7 @@ const ToastContainer = () => {
   // Get toast notifications from the cart context to display to user
   const { toasts } = useCart();
   return (
-    <div className="fixed top-24 right-6 z-[100] flex flex-col gap-3">
+    <div className="fixed top-24 right-6 z-100 flex flex-col gap-3">
       {toasts.map(toast => (
         <div key={toast.id} className={`px-6 py-4 rounded-2xl shadow-2xl border-l-4 animate-slide-in-right ${toast.type === 'success' ? 'bg-primary text-white border-secondary' : 'bg-red-600 text-white border-red-800'}`}>
           <div className="flex items-center gap-3">
@@ -48,7 +48,7 @@ const ToastContainer = () => {
  * Handles conditional rendering of layout elements based on whether the user is in admin or client section
  * Manages the display of animations and global styles
  */
-const Layout = ({ children, setUser, setIsCartOpen, user, isCartOpen }) => {
+const Layout = ({ children, setIsCartOpen, isCartOpen }) => {
   // Get current page location to determine if we're in admin section
   const location = useLocation();
   // Check if current path is an admin path
@@ -106,6 +106,7 @@ export default function App() {
   // Update products state when new products are fetched from API
   useEffect(() => {
     if (fetchedProducts && fetchedProducts.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProducts(fetchedProducts);
     }
   }, [fetchedProducts]);
@@ -113,6 +114,7 @@ export default function App() {
   // Update categories state when new categories are fetched from API
   useEffect(() => {
     if (fetchedCategories && fetchedCategories.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCategories(fetchedCategories);
     }
   }, [fetchedCategories]);

@@ -84,7 +84,7 @@ const ProductsManagement = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[900px]">
+        <table className="w-full text-left border-collapse min-w-225">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 uppercase text-sm tracking-widest text-gray-700 font-bold">
               <th className="p-5">Product</th>
@@ -119,7 +119,7 @@ const ProductsManagement = () => {
                       </div>
                       <div>
                         <p className="font-bold text-dark-brown text-lg">{product.name}</p>
-                        <p className="text-xs text-gray-400 line-clamp-1 max-w-[220px]">{product.description}</p>
+                        <p className="text-xs text-gray-400 line-clamp-1 max-w-55">{product.description}</p>
                       </div>
                     </div>
                   </td>

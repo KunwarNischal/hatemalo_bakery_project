@@ -66,7 +66,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100">
+        <div className="bg-white p-8 rounded-4xl shadow-sm border border-gray-100">
           <h3 className="text-xl font-bold text-dark-brown mb-6 flex items-center gap-2">
             <Package size={22} className="text-light-brown" /> Inventory Health
           </h3>
@@ -110,7 +110,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100">
+        <div className="bg-white p-8 rounded-4xl shadow-sm border border-gray-100">
           <h3 className="text-xl font-bold text-dark-brown mb-6 flex items-center gap-2">
             <ShoppingBag size={22} className="text-light-brown" /> Order Flow
           </h3>
@@ -133,7 +133,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100">
+      <div className="bg-white p-8 rounded-4xl shadow-sm border border-gray-100">
         <h3 className="text-xl font-bold text-dark-brown mb-6 flex items-center gap-2">
           <Layers size={22} className="text-light-brown" /> Menu Breakdown
         </h3>

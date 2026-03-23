@@ -100,7 +100,7 @@ const OrdersManagement = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[1200px]">
+        <table className="w-full text-left border-collapse min-w-300">
           <thead>
             <tr className="bg-gray-50 border-b-2 border-gray-200 uppercase text-sm tracking-wider text-gray-700 font-bold whitespace-nowrap">
               <th className="p-3 w-14">Order ID</th>

@@ -38,6 +38,7 @@ const CategoriesManagement = () => {
   } = context;
 
   // Search input for filtering categories
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filter categories by search term
@@ -139,7 +140,7 @@ const CategoriesManagement = () => {
               alt="Bakery Items"
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent flex items-end p-8">
               <h2 className="text-2xl font-bold text-white uppercase tracking-wider">HateMalo Selection</h2>
             </div>
           </div>

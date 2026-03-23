@@ -103,6 +103,7 @@ function getTokenFromStorage(storageKey, requireAdmin) {
       return data.token;
     }
     return null;
+  // eslint-disable-next-line no-unused-vars
   } catch (error) {
     return null;
   }
@@ -119,6 +120,7 @@ function getFromStorage(storageKey) {
   try {
     const dataJSON = localStorage.getItem(storageKey);
     return dataJSON ? JSON.parse(dataJSON) : null;
+  // eslint-disable-next-line no-unused-vars
   } catch (error) {
     return null;
   }
@@ -405,6 +407,7 @@ export const verifyCustomer = async (token) => {
     // If valid, update customer info in storage
     saveCustomerToStorage(data);
     return data;
+  // eslint-disable-next-line no-unused-vars
   } catch (error) {
     // If token is invalid or expired, remove it from storage
     // This effectively logs the user out
