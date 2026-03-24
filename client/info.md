@@ -1,17 +1,12 @@
 # Internship Report: Introduction & Objectives
-This document provides the foundational chapters for the "Hatemalo Bakery" project report, focusing on the motivation, project context, and core goals.
-
----
 
 ## 1. Introduction
 
-### 1.1 Project Context
-In the modern economic landscape of Nepal, the traditional "brick-and-mortar" model of local bakeries is rapidly evolving. Customers now demand convenience, transparency, and the ability to interact with brands digitally. **Hatemalo Bakery**, a local establishment, recognized the need to bridge the gap between traditional craftsmanship and digital accessibility.
+### 1.1. Introduction
+The internship was conducted at Aariyana Tech Solution, focusing on the development of a modern, responsive frontend for **"Hatemalo Bakery,"** a web-based e-commerce platform. The project involved building the user interface, implementing the shopping cart logic, and ensuring a seamless experience for both customers and administrators.
 
-The "Hatemalo Bakery Project" is an e-commerce initiative designed to provide a specialized digital storefront. This report focuses on the **Frontend Development** aspect of the project, which serves as the primary touchpoint for customers. Developed using **React.js** and **Tailwind CSS**, the frontend is engineered to be visually appealing, highly responsive, and capable of handling complex state transitions like shopping carts and order processing.
-
-### 1.2 Motivation
-The primary motivation behind this project was to solve the problem of "Manual Transaction Bottlenecks." By digitizing the menu and order flow, we eliminate the need for physical visits for information gathering, thereby increasing the bakery's operational reach while providing a premium user experience (UX).
+### 1.2. Problem Statement
+Traditional local bakeries often lack a digital presence, leading to limited customer reach and inefficient manual order management. The "Hatemalo Bakery" project addresses these issues by providing a digital storefront with real-time inventory updates and automated order processing.
 
 ---
 

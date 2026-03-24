@@ -4,25 +4,41 @@
 **Intern:** [Your Name]  
 **Organization:** Aariyana Tech Solution  
 
+
+---
+
+# ABSTRACT
+
+The core involvement during the internship focused on frontend web development using modern web technologies. The internship primarily involved developing user interfaces and implementing structured web layouts using React.js, specifically for the **'Hatemalo Bakery'** e-commerce platform. It introduced the process of building functional web pages and implementing responsive layouts for the website.
+
+This report discusses the development process of the frontend structure of the bakery’s e-commerce platform. The project emphasized component-based development, interface structuring, and maintaining visual consistency across different pages.
+
+The implementation process involved creating reusable components, designing user-friendly interfaces, and optimizing layouts to ensure responsiveness across various screen sizes. Through this project, practical knowledge of modern frontend development workflows and web design principles was achieved.
+
+**Keywords:** React.js, Frontend Development, User Interface, Web Development, Responsive Design.
+
 ---
 
 ## Chapter 1: Introduction
 
-### 1.1 Introduction to the Internship
-The internship was conducted at Aariyana Tech Solution, focusing on the development of a modern, responsive frontend for "Hatemalo Bakery," a web-based e-commerce platform. The project aims to provide a seamless user experience for customers to browse bakery products and for administrators to manage inventory and orders.
+### 1.1. Introduction
+The internship was conducted at Aariyana Tech Solution, focusing on the development of a modern, responsive frontend for **"Hatemalo Bakery,"** a web-based e-commerce platform. The project involved building the user interface, implementing the shopping cart logic, and ensuring a seamless experience for both customers and administrators.
 
-### 1.2 Problem Statement
+### 1.2. Problem Statement
 Traditional local bakeries often lack a digital presence, leading to limited customer reach and inefficient manual order management. The "Hatemalo Bakery" project addresses these issues by providing a digital storefront with real-time inventory updates and automated order processing.
 
-### 1.3 Objectives
+### 1.3. Objectives
 *   To develop a responsive and interactive user interface using React.js.
 *   To implement global state management for a persistent shopping cart.
 *   To integrate secure authentication for both customers and administrators.
 *   To build an administrative dashboard for real-time data management.
 
-### 1.4 Scope and Limitations (Frontend)
+### 1.4. Scope and Limitation
 *   **Scope:** UI/UX design, client-side routing, state management, API integration, and frontend security logic.
-*   **Limitations:** This report focuses strictly on client-side implementation; server-side database management and API construction are outside the scope of this individual contribution.
+*   **Limitation:** This report focuses strictly on client-side implementation; server-side database management and API construction are outside the scope of this individual contribution.
+
+### 1.5. Report Organization
+This report is organized into several chapters. Chapter 1 provides the introduction and objectives. Chapter 2 describes the organization and literature review. Chapter 3 discusses the requirement analysis and methodology. Chapter 4 details the internship activities and roles. Chapter 5 explores technical mastery through a "WH" analysis. Chapter 6 analyzes the external ecosystem and tooling. Finally, Chapter 7 provides a reflective summary and conclusion.
 
 ---
 
